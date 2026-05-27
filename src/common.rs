@@ -2099,6 +2099,13 @@ pub fn apply_xtimes_fixed_network() {
         settings.insert(keys::OPTION_API_SERVER.to_owned(), "".to_owned());
         settings.insert(keys::OPTION_KEY.to_owned(), XTIMES_SERVER_KEY.to_owned());
         settings.insert(keys::OPTION_DIRECT_SERVER.to_owned(), "Y".to_owned());
+        settings.insert(keys::OPTION_ALLOW_WEBSOCKET.to_owned(), "N".to_owned());
+        settings.insert(keys::OPTION_DISABLE_UDP.to_owned(), "N".to_owned());
+        settings.insert(
+            keys::OPTION_ALLOW_INSECURE_TLS_FALLBACK.to_owned(),
+            "N".to_owned(),
+        );
+        settings.insert(keys::OPTION_ENABLE_FILE_TRANSFER.to_owned(), "N".to_owned());
         settings.insert(
             keys::OPTION_ALLOW_REMOTE_CONFIG_MODIFICATION.to_owned(),
             "N".to_owned(),
@@ -2108,10 +2115,6 @@ pub fn apply_xtimes_fixed_network() {
 
     {
         let mut builtin = config::BUILTIN_SETTINGS.write().unwrap();
-        builtin.insert(keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned(), "Y".to_owned());
-        builtin.insert(keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned());
-        builtin.insert(keys::OPTION_HIDE_PROXY_SETTINGS.to_owned(), "Y".to_owned());
-        builtin.insert(keys::OPTION_HIDE_WEBSOCKET_SETTINGS.to_owned(), "Y".to_owned());
         builtin.insert(keys::OPTION_DISABLE_UNLOCK_PIN.to_owned(), "Y".to_owned());
     }
 }

@@ -182,7 +182,9 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
     v.add(
       TTextMenu(
           child: Text(translate('Transfer file')),
-          onPressed: () => connectWithToken(isFileTransfer: true)),
+          onPressed: mainGetBoolOptionSync(kOptionEnableFileTransfer)
+              ? () => connectWithToken(isFileTransfer: true)
+              : null),
     );
     v.add(
       TTextMenu(

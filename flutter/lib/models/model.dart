@@ -3691,6 +3691,9 @@ class FFI {
     List<int>? displays,
   }) {
     closed = false;
+    if (isFileTransfer && !mainGetBoolOptionSync(kOptionEnableFileTransfer)) {
+      return;
+    }
     if (isMobile) mobileReset();
     assert(
         (!(isPortForward && isViewCamera)) &&

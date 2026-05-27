@@ -547,6 +547,7 @@ abstract class BasePeerCard extends StatelessWidget {
     bool isRDP = false,
     bool isTerminal = false,
     bool isTerminalRunAsAdmin = false,
+    RxBool? enabled,
   }) {
     return MenuEntryButton<String>(
       childBuilder: (TextStyle? style) => Text(
@@ -570,6 +571,7 @@ abstract class BasePeerCard extends StatelessWidget {
       },
       padding: menuPadding,
       dismissOnClicked: true,
+      enabled: enabled,
     );
   }
 
@@ -589,6 +591,7 @@ abstract class BasePeerCard extends StatelessWidget {
       context,
       translate('Transfer file'),
       isFileTransfer: true,
+      enabled: mainGetBoolOptionSync(kOptionEnableFileTransfer).obs,
     );
   }
 

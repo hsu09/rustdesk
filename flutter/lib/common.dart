@@ -2246,6 +2246,10 @@ bool handleUriLink({List<String>? cmdArgs, Uri? uri, String? uriString}) {
     windowOnTop(null);
     return true;
   }
+  if (args.contains('--file-transfer') &&
+      !mainGetBoolOptionSync(kOptionEnableFileTransfer)) {
+    return true;
+  }
 
   UriLinkType? type;
   String? id;
@@ -2440,6 +2444,11 @@ List<String>? urlLinkToCmdArgs(Uri uri) {
   var queryParameters =
       uri.queryParameters.map((k, v) => MapEntry(k.toLowerCase(), v));
 
+  if (command == '--file-transfer' &&
+      !mainGetBoolOptionSync(kOptionEnableFileTransfer)) {
+    return null;
+  }
+
   var key = queryParameters["key"];
   if (id != null) {
     if (key != null) {
@@ -2498,6 +2507,9 @@ connectMainDesktop(String id,
     String? password,
     String? connToken,
     bool? isSharedPassword}) async {
+  if (isFileTransfer && !mainGetBoolOptionSync(kOptionEnableFileTransfer)) {
+    return;
+  }
   if (isFileTransfer) {
     await rustDeskWinManager.newFileTransfer(id,
         password: password,
@@ -2546,6 +2558,9 @@ connect(BuildContext context, String id,
     String? connToken,
     bool? isSharedPassword}) async {
   if (id == '') return;
+  if (isFileTransfer && !mainGetBoolOptionSync(kOptionEnableFileTransfer)) {
+    return;
+  }
   if (!isDesktop || desktopType == DesktopType.main) {
     try {
       if (Get.isRegistered<IDTextEditingController>()) {

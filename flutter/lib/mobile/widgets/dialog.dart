@@ -74,6 +74,10 @@ void showServerSettingsWithValue(
   final relayCtrl = TextEditingController(text: serverConfig.relayServer);
   final apiCtrl = TextEditingController(text: serverConfig.apiServer);
   final keyCtrl = TextEditingController(text: serverConfig.key);
+  final isServerConfigFixed = isOptionFixed('custom-rendezvous-server') ||
+      isOptionFixed('relay-server') ||
+      isOptionFixed('api-server') ||
+      isOptionFixed('key');
 
   RxString idServerMsg = ''.obs;
   RxString relayServerMsg = ''.obs;
@@ -125,7 +129,8 @@ void showServerSettingsWithValue(
                       EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                 ),
                 validator: validator,
-                autofocus: autofocus,
+                autofocus: autofocus && !isServerConfigFixed,
+                enabled: !isServerConfigFixed,
               ).workaroundFreezeLinuxMint(),
             ),
           ],
@@ -139,6 +144,7 @@ void showServerSettingsWithValue(
           errorText: errorMsg.isEmpty ? null : errorMsg,
         ),
         validator: validator,
+        enabled: !isServerConfigFixed,
       ).workaroundFreezeLinuxMint();
     }
 
@@ -146,7 +152,8 @@ void showServerSettingsWithValue(
       title: Row(
         children: [
           Expanded(child: Text(translate('ID/Relay Server'))),
-          ...ServerConfigImportExportWidgets(controllers, errMsgs),
+          if (!isServerConfigFixed)
+            ...ServerConfigImportExportWidgets(controllers, errMsgs),
         ],
       ),
       content: ConstrainedBox(
@@ -192,18 +199,19 @@ void showServerSettingsWithValue(
         dialogButton('Cancel', onPressed: () {
           close();
         }, isOutline: true),
-        dialogButton(
-          'OK',
-          onPressed: () async {
-            if (await submit()) {
-              close();
-              showToast(translate('Successful'));
-              upSetState?.call(() {});
-            } else {
-              showToast(translate('Failed'));
-            }
-          },
-        ),
+        if (!isServerConfigFixed)
+          dialogButton(
+            'OK',
+            onPressed: () async {
+              if (await submit()) {
+                close();
+                showToast(translate('Successful'));
+                upSetState?.call(() {});
+              } else {
+                showToast(translate('Failed'));
+              }
+            },
+          ),
       ],
     );
   });

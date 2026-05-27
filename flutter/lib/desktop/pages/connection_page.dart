@@ -557,15 +557,20 @@ class _ConnectionPageState extends State<ConnectionPage>
                                   items: [
                                     (
                                       'Transfer file',
-                                      () => onConnect(isFileTransfer: true)
+                                      () => onConnect(isFileTransfer: true),
+                                      mainGetBoolOptionSync(
+                                        kOptionEnableFileTransfer,
+                                      ).obs,
                                     ),
                                     (
                                       'View camera',
-                                      () => onConnect(isViewCamera: true)
+                                      () => onConnect(isViewCamera: true),
+                                      true.obs,
                                     ),
                                     (
                                       '${translate('Terminal')} (beta)',
-                                      () => onConnect(isTerminal: true)
+                                      () => onConnect(isTerminal: true),
+                                      true.obs,
                                     ),
                                   ]
                                       .map((e) => MenuEntryButton<String>(
@@ -579,6 +584,7 @@ class _ConnectionPageState extends State<ConnectionPage>
                                                 horizontal:
                                                     kDesktopMenuPadding.left),
                                             dismissOnClicked: true,
+                                            enabled: e.$3,
                                           ))
                                       .map((e) => e.build(
                                           context,

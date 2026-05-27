@@ -1595,7 +1595,9 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
       Widget? trailing,
       bool showTooltip = false,
       String tooltipMessage = '',
+      bool enabled = true,
     }) {
+      final tileEnabled = !locked && enabled;
       final titleWidget = showTooltip
           ? Row(
               children: [
@@ -1629,10 +1631,12 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
             );
 
       return ListTile(
-        leading: Icon(icon, color: _accentColor),
+        leading: Icon(icon,
+            color:
+                tileEnabled ? _accentColor : Theme.of(context).disabledColor),
         title: titleWidget,
-        enabled: !locked,
-        onTap: onTap,
+        enabled: tileEnabled,
+        onTap: tileEnabled ? onTap : null,
         trailing: trailing,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -1650,6 +1654,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
           title: title,
           showTooltip: true,
           tooltipMessage: tooltipMessage,
+          enabled: !(locked || isOptionFixed(optionKey)),
           trailing: Switch(
             value: mainGetBoolOptionSync(optionKey),
             onChanged: locked || isOptionFixed(optionKey)
@@ -1662,6 +1667,15 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
         );
 
     final outgoingOnly = bind.isOutgoingOnly();
+    final fixedServerSettings =
+        isOptionFixed('custom-rendezvous-server') ||
+            isOptionFixed('relay-server') ||
+            isOptionFixed('api-server') ||
+            isOptionFixed('key');
+    final fixedNetworkSettings = fixedServerSettings ||
+        isOptionFixed(kOptionAllowWebSocket) ||
+        isOptionFixed(kOptionDisableUdp) ||
+        isOptionFixed(kOptionAllowInsecureTLSFallback);
 
     final divider = const Divider(height: 1, indent: 16, endIndent: 16);
     return _Card(
@@ -1676,6 +1690,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                   icon: Icons.dns_outlined,
                   title: 'ID/Relay Server',
                   onTap: () => showServerSettings(gFFI.dialogManager, setState),
+                  enabled: !fixedServerSettings,
                 ),
               if (!hideProxy && !hideServer) divider,
               if (!hideProxy)
@@ -1683,6 +1698,7 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                   icon: Icons.network_ping_outlined,
                   title: 'Socks5/Http(s) Proxy',
                   onTap: changeSocks5Proxy,
+                  enabled: !fixedNetworkSettings,
                 ),
               if (!hideWebSocket && (!hideServer || !hideProxy)) divider,
               if (!hideWebSocket)
@@ -1715,6 +1731,8 @@ class _NetworkState extends State<_Network> with AutomaticKeepAliveClientMixin {
                               showTooltip: true,
                               tooltipMessage:
                                   '${translate('disable-udp-tip')}\n\n${translate('server-oss-not-support-tip')}',
+                              enabled:
+                                  !(locked || isOptionFixed(kOptionDisableUdp)),
                               trailing: Switch(
                                 value: bind.mainGetOptionSync(
                                         key: kOptionDisableUdp) ==
@@ -2552,7 +2570,8 @@ Widget _OptionCheckBox(
           Expanded(
               child: Text(
             translate(label),
-            style: TextStyle(color: disabledTextColor(context, enabled)),
+            style: TextStyle(
+                color: disabledTextColor(context, enabled && !isOptFixed)),
           ))
         ],
       ),

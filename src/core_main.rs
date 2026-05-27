@@ -115,6 +115,12 @@ pub fn core_main() -> Option<Vec<String>> {
     if args.contains(&"--connect".to_string()) || args.contains(&"--view-camera".to_string()) {
         hbb_common::platform::windows::start_cpu_performance_monitor();
     }
+    if args.contains(&"--file-transfer".to_string())
+        && !config::Config::get_bool_option(config::keys::OPTION_ENABLE_FILE_TRANSFER)
+    {
+        log::info!("file transfer is disabled by policy");
+        return None;
+    }
     #[cfg(feature = "flutter")]
     if _is_flutter_invoke_new_connection {
         return core_main_invoke_new_connection(std::env::args());
