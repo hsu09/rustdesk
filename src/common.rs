@@ -2081,14 +2081,51 @@ pub fn rustdesk_interval(i: Interval) -> ThrottledInterval {
     ThrottledInterval::new(i)
 }
 
+const XTIMES_ID_SERVER: &str = "10.21.21.158";
+const XTIMES_RELAY_SERVER: &str = "10.21.21.158";
+const XTIMES_SERVER_KEY: &str = "lFgtmqlbbqs5dzR58lo9l0wNKJURcq74eu++9YK+Zn0=";
+
+pub fn apply_xtimes_fixed_network() {
+    {
+        let mut settings = config::OVERWRITE_SETTINGS.write().unwrap();
+        settings.insert(
+            keys::OPTION_CUSTOM_RENDEZVOUS_SERVER.to_owned(),
+            XTIMES_ID_SERVER.to_owned(),
+        );
+        settings.insert(
+            keys::OPTION_RELAY_SERVER.to_owned(),
+            XTIMES_RELAY_SERVER.to_owned(),
+        );
+        settings.insert(keys::OPTION_API_SERVER.to_owned(), "".to_owned());
+        settings.insert(keys::OPTION_KEY.to_owned(), XTIMES_SERVER_KEY.to_owned());
+        settings.insert(keys::OPTION_DIRECT_SERVER.to_owned(), "Y".to_owned());
+        settings.insert(
+            keys::OPTION_ALLOW_REMOTE_CONFIG_MODIFICATION.to_owned(),
+            "N".to_owned(),
+        );
+        settings.insert("stop-service".to_owned(), "N".to_owned());
+    }
+
+    {
+        let mut builtin = config::BUILTIN_SETTINGS.write().unwrap();
+        builtin.insert(keys::OPTION_HIDE_NETWORK_SETTINGS.to_owned(), "Y".to_owned());
+        builtin.insert(keys::OPTION_HIDE_SERVER_SETTINGS.to_owned(), "Y".to_owned());
+        builtin.insert(keys::OPTION_HIDE_PROXY_SETTINGS.to_owned(), "Y".to_owned());
+        builtin.insert(keys::OPTION_HIDE_WEBSOCKET_SETTINGS.to_owned(), "Y".to_owned());
+        builtin.insert(keys::OPTION_DISABLE_UNLOCK_PIN.to_owned(), "Y".to_owned());
+    }
+}
+
 pub fn load_custom_client() {
     #[cfg(debug_assertions)]
     if let Ok(data) = std::fs::read_to_string("./custom.txt") {
         read_custom_client(data.trim());
+        apply_xtimes_fixed_network();
         return;
     }
     let Some(path) = std::env::current_exe().map_or(None, |x| x.parent().map(|x| x.to_path_buf()))
     else {
+        apply_xtimes_fixed_network();
         return;
     };
     #[cfg(target_os = "macos")]
@@ -2097,10 +2134,12 @@ pub fn load_custom_client() {
     if path.is_file() {
         let Ok(data) = std::fs::read_to_string(&path) else {
             log::error!("Failed to read custom client config");
+            apply_xtimes_fixed_network();
             return;
         };
         read_custom_client(&data.trim());
     }
+    apply_xtimes_fixed_network();
 }
 
 fn read_custom_client_advanced_settings(
