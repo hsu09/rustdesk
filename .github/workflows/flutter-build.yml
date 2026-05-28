@@ -46,6 +46,9 @@ env:
   MACOS_P12_BASE64: "${{ secrets.MACOS_P12_BASE64 }}"
   UPLOAD_ARTIFACT: "${{ inputs.upload-artifact }}"
   SIGN_BASE_URL: "${{ secrets.SIGN_BASE_URL }}-2"
+  WINDOWS_CERTIFICATE_PFX_BASE64: "${{ secrets.WINDOWS_CERTIFICATE_PFX_BASE64 }}"
+  WINDOWS_CERTIFICATE_PASSWORD: "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}"
+  WINDOWS_TIMESTAMP_URL: "http://timestamp.digicert.com"
 
 jobs:
   generate-bridge:
@@ -240,6 +243,26 @@ jobs:
           pip3 install requests argparse
           BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./rustdesk/
 
+      - name: Sign rustdesk files with PFX certificate
+        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL == '-2' && env.WINDOWS_CERTIFICATE_PFX_BASE64 != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $certPath = Join-Path $env:RUNNER_TEMP "windows-codesign.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_PFX_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match '\\x64\\signtool\.exe$' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signtool) {
+            throw "signtool.exe not found"
+          }
+          $files = Get-ChildItem .\rustdesk -Recurse -File | Where-Object { $_.Extension -in ".exe", ".dll" }
+          foreach ($file in $files) {
+            & $signtool sign /f $certPath /p $env:WINDOWS_CERTIFICATE_PASSWORD /fd SHA256 /tr $env:WINDOWS_TIMESTAMP_URL /td SHA256 /v $file.FullName
+          }
+          Remove-Item $certPath -Force
+
       - name: Build self-extracted executable
         shell: bash
         if: env.UPLOAD_ARTIFACT == 'true'
@@ -270,6 +293,27 @@ jobs:
         shell: bash
         run: |
           BASE_URL=${{ env.SIGN_BASE_URL }} SECRET_KEY=${{ secrets.SIGN_SECRET_KEY }} python3 res/job.py sign_files ./SignOutput
+
+      - name: Sign Windows packages with PFX certificate
+        if: env.UPLOAD_ARTIFACT == 'true' && env.SIGN_BASE_URL == '-2' && env.WINDOWS_CERTIFICATE_PFX_BASE64 != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $certPath = Join-Path $env:RUNNER_TEMP "windows-codesign.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE_PFX_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter signtool.exe |
+            Where-Object { $_.FullName -match '\\x64\\signtool\.exe$' } |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1 -ExpandProperty FullName
+          if (-not $signtool) {
+            throw "signtool.exe not found"
+          }
+          $files = Get-ChildItem .\SignOutput -File | Where-Object { $_.Extension -in ".exe", ".msi" }
+          foreach ($file in $files) {
+            & $signtool sign /f $certPath /p $env:WINDOWS_CERTIFICATE_PASSWORD /fd SHA256 /tr $env:WINDOWS_TIMESTAMP_URL /td SHA256 /v $file.FullName
+            & $signtool verify /pa /v $file.FullName
+          }
+          Remove-Item $certPath -Force
 
       - name: Publish Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
