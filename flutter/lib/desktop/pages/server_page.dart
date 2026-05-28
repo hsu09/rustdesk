@@ -1225,8 +1225,8 @@ void checkClickTime(int id, Function() callback) async {
 }
 
 bool allowRemoteCMModification() {
-  return option2bool(kOptionAllowRemoteCmModification,
-      bind.mainGetLocalOption(key: kOptionAllowRemoteCmModification));
+  final value = bind.mainGetLocalOption(key: kOptionAllowRemoteCmModification);
+  return value.isEmpty || option2bool(kOptionAllowRemoteCmModification, value);
 }
 
 class _FileTransferLogPage extends StatefulWidget {

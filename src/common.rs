@@ -2114,7 +2114,13 @@ pub fn apply_xtimes_fixed_network() {
     }
 
     {
+        let mut local = config::OVERWRITE_LOCAL_SETTINGS.write().unwrap();
+        local.insert("allow-remote-cm-modification".to_owned(), "Y".to_owned());
+    }
+
+    {
         let mut builtin = config::BUILTIN_SETTINGS.write().unwrap();
+        builtin.insert("hide-help-cards".to_owned(), "Y".to_owned());
         builtin.insert(keys::OPTION_DISABLE_UNLOCK_PIN.to_owned(), "Y".to_owned());
     }
 }
